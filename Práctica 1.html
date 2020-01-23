@@ -1,0 +1,508 @@
+<!-- ALVARO BERRIO GALINDO-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Práctica 1: Letra Tsade</title>
+
+<style>
+      h1{font-family:Arial; text-align:center;}
+      body{ width: 1350px;  height: 600px; background-color: LemonChiffon ;}
+      .trasla_y{float:left;width:110px;height: 270px;border:3px solid LightSlateGrey;margin-left: 80px;margin-top:60px}
+      .trasla_y p{font-family: Arial;text-align:center;font-weight: 600;}
+      .trasla_y input{float:left;width:200px;height:15px;transform:rotate(-90deg);margin-top:90px;margin-left:-40px}
+      canvas{ float:left;background-color: white; border: 3px solid LightSlateGrey;margin-left:50px}
+      .slider-wrapper { float:left;width: 300px;  height: 500px; font-family:Arial;margin-left:50px;margin-top:35px}
+      .slider-wrapper div {width: 270px; height:70px;text-align:center; border:3px solid LightSlateGrey; margin:10px}
+      .slider-wrapper p {width: 250px; height: 15px; text-align:center; font-weight:600;}
+      .slider-wrapper input {width: 250px; height: 15px;margin-top: -12px}
+      .botones{float:left;margin-left:50px;margin-top:180px}
+      .botones button{display:block;width:130px;height:35px;margin:20px}
+</style>
+<script>
+
+
+
+  // ****************** Variables Globales
+  var   gl = null,
+        canvas = null,
+        glProgram = null,
+        fragmentShader = null,
+        vertexShader = null;
+  var   positionLocatAttrib =null,
+        colorLocatAttrib = null,
+        bufferVertices =null,
+        bufferColores = null;
+
+  var verticeBuffer, indexVerticeBuffer=null;
+  var vertices, indVertices=null;
+
+  //COLOR
+  var r=1.0,g=0,b=0;
+
+
+
+/********************* 1. INIT WEBGL **************************************/
+function initWebGL()
+      {
+        canvas = document.getElementById("canvas");gl = canvas.getContext("webgl");
+
+        if(gl)
+        {
+          setupWebGL();
+          initShaders();
+          setupBuffers();
+          drawScene();
+        }
+        else{
+          alert(  "El navegador no soporta WEBGL.");
+        }
+      }
+      /********************* 2.setupWEBGL **************************************/
+      function setupWebGL()
+      {
+        //Pone el color de fondo blanco
+        gl.clearColor(1.0, 1.0, 1.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        //Crea un viewport del tamaño del canvas
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+      /********************* 3. INIT SHADER **************************************/
+      function initShaders()
+      {
+       // Esta función inicializa los shaders
+
+        //1.Obtengo la referencia de los shaders
+        var fs_source = document.getElementById('fragment-shader').innerHTML;
+        var vs_source = document.getElementById('vertex-shader').innerHTML;
+
+        //2. Compila los shaders
+        vertexShader = makeShader(vs_source, gl.VERTEX_SHADER);
+        fragmentShader = makeShader(fs_source, gl.FRAGMENT_SHADER);
+
+          //3. Crea un programa
+          glProgram = gl.createProgram();
+
+        //4. Adjunta al programa cada shader
+          gl.attachShader(glProgram, vertexShader);
+          gl.attachShader(glProgram, fragmentShader);
+          gl.linkProgram(glProgram);
+
+        if (!gl.getProgramParameter(glProgram, gl.LINK_STATUS)) {
+           alert("No se puede inicializar el Programa .");
+          }
+
+        //5. Usa el programa
+        gl.useProgram(glProgram);
+      }
+     /********************* 3.1. MAKE SHADER **************************************/
+      function makeShader(src, type)
+      {
+        //Compila cada  shader
+        var shader = gl.createShader(type);
+        gl.shaderSource(shader, src);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+              alert("Error de compilación del shader: " + gl.getShaderInfoLog(shader));
+          }
+        return shader;
+      }
+
+     /********************* 4 SETUP BUFFERS  **************************************/
+      function setupBuffers()
+      {
+          vertices = [
+          -0.7,  -0.86,//0
+          -0.60, -0.66,//1
+           0.5,  -0.86,//2
+           0.6,  -0.66,//3
+           0.35, -0.66,//4
+           0.37, -0.63,//5
+           0.37, -0.60,//6
+           0.36, -0.57,//7
+           0.34, -0.54,//8
+           0.62, -0.61,//9
+           0.63, -0.56,//10
+           0.62, -0.51,//11
+           0.59, -0.44,//12
+           0.54, -0.38,//13
+          -0.15, -0.06,//14
+           0.21, -0.11,//15
+          -0.18, -0.01,//16
+          -0.21,  0.07,//17
+          -0.22,  0.13,//18
+           0.13, -0.03,//19
+           0.13,  0.00,//20
+           0.15,  0.03,//21
+           0.17,  0.05,//22
+           0.01,  0.09,//23
+          -0.02,  0.10,//24
+          -0.06,  0.13,//25
+          -0.09,  0.17,//26
+          -0.10,  0.22,//27
+          -0.21,  0.24,//28
+          -0.08,  0.35,//29
+          -0.09,  0.53,//30
+          -0.24,  0.28,//31
+          -0.27,  0.30,//32
+          -0.60,  0.31,//33
+          -0.68,  0.33,//34
+          -0.72,  0.36,//35
+          -0.74,  0.39,//36
+          -0.75,  0.44,//37
+          -0.74,  0.52,//38
+          -0.68,  0.68,//39
+          -0.59,  0.51,//40
+          -0.64,  0.73,//41
+          -0.61,  0.74,//42
+          -0.58,  0.71,//43
+          -0.53,  0.65,//44
+          -0.49,  0.63,//45
+          -0.46,  0.62,//46
+          -0.20,  0.60,//47
+          -0.16,  0.58,//48
+          -0.12,  0.56,//49
+           0.36,  0.31,//50
+           0.50,  0.31,//51
+           0.59,  0.49,//52
+           0.17,  0.31,//53
+           0.11,  0.34,//54
+           0.08,  0.38,//55
+           0.06,  0.42,//56
+           0.13,  0.56,//57
+           0.04 , 0.54,//58
+           0.06,  0.63,//59
+           0.09,  0.70,//60
+           0.13,  0.71,//61
+           0.16,  0.70,//62
+           0.18,  0.65,//63
+           0.22,  0.61,//64
+           0.36,  0.59,//65
+           0.56,  0.59,//66
+           0.62,  0.57,//67
+           0.66,  0.54,//68
+           0.69,  0.44,//69
+           0.69,  0.35,//70
+           0.68,  0.32,//71
+           0.65,  0.28,//72
+           0.63,  0.32,//73
+           0.60,  0.34,//74
+           0.54,  0.33,//75
+        ];
+
+
+      // BUffer que almacena los vértices
+      verticeBuffer = gl.createBuffer();
+     gl.bindBuffer(gl.ARRAY_BUFFER, verticeBuffer);
+     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+
+     indVertices=[
+     0,1,2,
+     1,2,3,
+
+     3,4,5,
+     3,5,6,
+     3,6,7,
+     3,7,8,
+
+     8,3,9,
+     8,9,10,
+     8,10,11,
+     8,11,12,
+     8,12,13,
+
+     8,14,15,
+     8,13,15,
+
+     15,14,16,
+     15,16,17,
+     15,17,18,
+
+     18,15,19,
+     18,19,20,
+     18,20,21,
+     18,21,22,
+
+     18,22,23,
+     18,23,24,
+     18,24,25,
+     18,25,26,
+     18,26,27,
+
+     18,27,28,
+     28,27,29,
+     28,29,30,
+
+     30,28,31,
+     30,31,32,
+     30,32,33,
+     30,33,34,
+     30,34,35,
+     30,35,36,
+     30,36,37,
+     30,37,38,
+
+
+     40,38,39,
+     40,39,41,
+     40,41,42,
+     40,42,43,
+     40,43,44,
+     40,44,45,
+     40,45,46,
+     40,46,47,
+     40,47,48,
+     40,48,49,
+     40,30,49,
+
+     50,22,23,
+     50,22,51,
+
+     52,50,51,
+     52,50,53,
+     52,53,54,
+     52,54,55,
+     52,55,56,
+     52,56,57,
+
+     57,56,58,
+     57,58,59,
+     57,59,60,
+     57,60,61,
+     57,61,62,
+     57,62,63,
+     57,63,64,
+
+     52,57,64,
+     52,64,65,
+     52,65,66,
+     52,66,67,
+     52,67,68,
+     52,68,69,
+     52,69,70,
+     52,70,71,
+     52,71,72,
+     52,72,73,
+     52,73,74,
+     52,74,75,
+     52,75,51,
+
+     71,72,73,
+     ];
+
+      //BUFFER PARA IBO
+      indexVerticeBuffer = gl.createBuffer();
+      //Longitud del buffer
+      indexVerticeBuffer.number_vertex_points=indVertices.length;
+      //Se le dice que el buffer almacena los indices a los vértices
+     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexVerticeBuffer);
+     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indVertices), gl.STATIC_DRAW);
+
+
+    }
+/********************* 5 DRAW SCENE  **************************************/
+
+
+      function drawScene()
+      {
+             //Busca dónde debe ir la posicion de los vértices en el programa.
+             positionLocatAttrib = gl.getAttribLocation(glProgram, "aVertexPosition");
+             gl.enableVertexAttribArray(positionLocatAttrib);
+             //Enlazo con las posiciones de los vértices
+             gl.bindBuffer(gl.ARRAY_BUFFER, verticeBuffer);
+             gl.vertexAttribPointer(positionLocatAttrib, 2, gl.FLOAT, false, 0, 0);
+             // Se la recuerda que utilice los indices de arrays
+             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexVerticeBuffer);
+
+            /*
+            ** TRASLACION
+            */
+            //Localiza la variable en el programa
+            traslacionLocat = gl.getUniformLocation(glProgram, "uTraslacion");
+            //Pasamos los valores
+            gl.uniform4f(traslacionLocat, Tx,Ty,Tz,0.0);
+            /*
+            ** ROTACION
+            */
+
+            // Convierte a radianes
+            var radian = Math.PI*angle/180;
+            var cosB = Math.cos(radian);
+            var sinB = Math.sin(radian);
+            //Localiza la variable en el programa
+            ucosB = gl.getUniformLocation(glProgram, "ucosB");
+            usinB = gl.getUniformLocation(glProgram, "usinB");
+            //Pasamos los valores
+            gl.uniform1f(ucosB, cosB);
+            gl.uniform1f(usinB, sinB);
+
+            /*
+            ** ESCALADO
+            */
+            escalLocat_x=gl.getUniformLocation(glProgram, "uEscalado_x");
+            escalLocat_y=gl.getUniformLocation(glProgram, "uEscalado_y");
+
+            gl.uniform1f(escalLocat_x, E_x);
+            gl.uniform1f(escalLocat_y, E_y);
+
+            /*
+            ** COLOR
+            */
+            rojo=gl.getUniformLocation(glProgram, "red");
+            verde=gl.getUniformLocation(glProgram, "green");
+            azul=gl.getUniformLocation(glProgram, "blue");
+
+
+            gl.uniform1f(rojo, r);
+            gl.uniform1f(verde, g);
+            gl.uniform1f(azul, b);
+
+            //Dibuja los triangulos
+            gl.drawElements(gl.TRIANGLES, indexVerticeBuffer.number_vertex_points, gl.UNSIGNED_SHORT,0);
+
+          }//de la funcion
+
+
+</script>
+<!-- ****************   VERTEX SHADER *******************-->
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+attribute vec2 aVertexPosition;
+//attribute vec3 aVertexColor;
+
+//La traslacion sencilla
+uniform  vec4  uTraslacion;
+
+//La rotacion sencilla
+uniform float ucosB, usinB;
+
+//El escalado
+uniform float uEscalado_x, uEscalado_y;
+
+void main() {
+  //AHORA transformo las coordenadas
+
+    gl_Position.x = (aVertexPosition.x * ucosB - aVertexPosition.y * usinB + uTraslacion.x)*uEscalado_x;
+    gl_Position.y = (aVertexPosition.x * usinB + aVertexPosition.y * ucosB + uTraslacion.y)*uEscalado_y;
+    gl_Position.z = 0.0;
+    gl_Position.w = 1.0;
+
+   gl_PointSize=10.0; //TAMAÑO DEL PUNTO
+}
+</script>
+<!-- ****************   FRAGMENT SHADER *******************-->
+<script id="fragment-shader" type="x-shader/x-fragment">
+  precision mediump float;
+  varying  highp vec4 vColor;
+  uniform float red, green, blue;
+
+  void main() {
+    gl_FragColor = vec4(red,green,blue,1.0);;
+  }
+</script>
+</head>
+<body onload="initWebGL()">
+      <h1> Práctica 1: Letra TSADE</h1>
+
+      <div class="trasla_y">
+        <p>Traslación Y</p>
+        <input type="range" id="Tras_y" min="-100" max="100" value= "5">
+      </div>
+
+<canvas id="canvas" width="495" height="495"></canvas>
+
+<div class="slider-wrapper">
+  <div class="trasla_x">
+    <p>Traslación X</p>
+    <input type="range" id="Tras_x" min="-100" max="100" value= "0">
+  </div>
+
+  <div class="rota">
+    <p>Rotación</p>
+    <input type="range" id="Rotacion" min="0" max="360" value= "0">
+  </div>
+  <div class="E_x">
+    <p>Escalado X</p>
+    <input type="range" id="Escal_x" min="0.3" max="1.2" value= "0.75" step="0.05">
+  </div>
+  <div class="E_y">
+    <p>Escalado Y</p>
+    <input type="range" id="Escal_y" min="0.3" max="1.2" value= "0.75" step="0.05">
+  </div>
+</div>
+<div class="botones">
+  <button type="button" id="cambia_color">
+    <label>Cambia color</label>
+  </button>
+  <button type="button" id="restablecer">
+    <label>Restablecer</label>
+  </button>
+</div>
+</body>
+
+<script>
+  var tras_x = document.getElementById("Tras_x");
+  var tras_y = document.getElementById("Tras_y");
+  var rotacion = document.getElementById("Rotacion");
+  var escal_x = document.getElementById("Escal_x");
+  var escal_y = document.getElementById("Escal_y");
+
+  // TRASLACION
+  var   traslacionLocat=null;
+  var   Tx=tras_x.value/100,
+        Ty=tras_y.value/100,
+        Tz=0.0;
+
+  // ROTACION
+  var   angle=-rotacion.value;
+  var   ucosB=null,
+        usinB=null;
+
+  // Escalado
+  var E_x=escal_x.value;
+  var E_y=escal_y.value;
+
+  tras_x.addEventListener('input',function(){
+                            Tx=tras_x.value/100;
+                            initWebGL();
+                            },false);
+
+  tras_y.addEventListener('input',function(){
+                            Ty=tras_y.value/100;
+                            initWebGL();
+                            },false);
+
+  rotacion.addEventListener('input',function(){
+                              angle=-rotacion.value;
+                              initWebGL();
+                            },false);
+
+  escal_x.addEventListener('input',function(){
+                              E_x=escal_x.value;
+                              initWebGL();
+                            },false);
+  escal_y.addEventListener('input',function(){
+                              E_y=escal_y.value;
+                              initWebGL();
+                            },false);
+  cambia_color.addEventListener('click',function(){
+                              r=Math.random();
+                              g=Math.random();
+                              b=Math.random();
+                              initWebGL();
+                            },false);
+  restablecer.addEventListener('click',function(){
+                              Tx=2/100,Ty=5/100,angle=0,E_x=0.67,E_y=0.67;
+                              r=1.0,g=0.0,b=0.0;
+                              tras_x.value=2;
+                              tras_y.value=5;
+                              escal_x.value=0.67;
+                              escal_y.value=0.67;
+                              rotacion.value=0;
+                              initWebGL();
+                            },false);
+</script>
+</html>
